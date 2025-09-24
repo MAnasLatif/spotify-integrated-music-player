@@ -2,6 +2,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Global scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
 /* Spotify-themed color palette */
 :root {
   /* Light theme colors */
@@ -232,6 +242,7 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

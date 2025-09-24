@@ -371,120 +371,123 @@ export default function PlaylistPage() {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6">
-        {/* Navigation */}
-        <div className="flex items-center gap-4">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => router.back()}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-medium text-gray-900">Playlist</h1>
-        </div>
+      <div className="min-h-screen pb-6">
+        <div className="space-y-6">
+          {/* Navigation */}
+          <div className="flex items-center gap-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 -mt-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-12 xl:px-12">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => router.back()}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-medium text-gray-900">Playlist</h1>
+          </div>
 
-        {/* Playlist Header */}
-        {playlist && (
-          <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
-            <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
-              {playlist.images?.[0]?.url ? (
-                <Image
-                  src={playlist.images?.[0]?.url || ''}
-                  alt={`${playlist.name || 'Unknown'} playlist cover`}
-                  width={192}
-                  height={192}
-                  className="w-full h-full object-cover"
-                  onError={() => {
-                    console.warn('Failed to load playlist image');
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Music className="h-16 w-16 text-gray-400" />
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0 space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">
-                  Playlist
-                </p>
-                <h2 className="text-3xl font-bold text-gray-900 mt-1 mb-2">
-                  {playlist.name}
-                </h2>
-                {playlist.description && (
-                  <p className="text-gray-600 leading-relaxed">
-                    {playlist.description}
-                  </p>
+          {/* Playlist Header */}
+          {playlist && (
+            <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
+              <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
+                {playlist.images?.[0]?.url ? (
+                  <Image
+                    src={playlist.images?.[0]?.url || ''}
+                    alt={`${playlist.name || 'Unknown'} playlist cover`}
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-cover"
+                    onError={() => {
+                      console.warn('Failed to load playlist image');
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Music className="h-16 w-16 text-gray-400" />
+                  </div>
                 )}
               </div>
-
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>{playlist.owner.display_name || 'Unknown'}</span>
-                <span>•</span>
-                <span>{formatNumber(playlist.tracks.total)} tracks</span>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    // Play first track if available
-                    if (tracks.length > 0 && tracks[0].track.uri) {
-                      handlePlayTrack(tracks[0].track.uri);
-                    }
-                  }}
-                  disabled={!deviceId || tracks.length === 0}
-                  className="bg-green-500 hover:bg-green-600 text-white"
-                >
-                  <Play className="h-5 w-5 fill-current mr-2" />
-                  Play
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={fetchTracks}
-                  disabled={tracksLoading}
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 mr-2 ${tracksLoading ? 'animate-spin' : ''}`}
-                  />
-                  Refresh
-                </Button>
-              </div>
-
-              {playerError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600">{playerError}</p>
+              <div className="flex-1 min-w-0 space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">
+                    Playlist
+                  </p>
+                  <h2 className="text-3xl font-bold text-gray-900 mt-1 mb-2">
+                    {playlist.name}
+                  </h2>
+                  {playlist.description && (
+                    <p className="text-gray-600 leading-relaxed">
+                      {playlist.description}
+                    </p>
+                  )}
                 </div>
-              )}
+
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span>{playlist.owner.display_name || 'Unknown'}</span>
+                  <span>•</span>
+                  <span>{formatNumber(playlist.tracks.total)} tracks</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      // Play first track if available
+                      if (tracks.length > 0 && tracks[0].track.uri) {
+                        handlePlayTrack(tracks[0].track.uri);
+                      }
+                    }}
+                    disabled={!deviceId || tracks.length === 0}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    <Play className="h-5 w-5 fill-current mr-2" />
+                    Play
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={fetchTracks}
+                    disabled={tracksLoading}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${tracksLoading ? 'animate-spin' : ''}`}
+                    />
+                    Refresh
+                  </Button>
+                </div>
+
+                {playerError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm text-red-600">{playerError}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Track List */}
-        <TrackList
-          tracks={tracks}
-          loading={tracksLoading}
-          error={error}
-          onPlay={handlePlayTrack}
-          onRetry={fetchTracks}
-        />
+          {/* Track List */}
+          <TrackList
+            tracks={tracks}
+            loading={tracksLoading}
+            error={error}
+            onPlay={handlePlayTrack}
+            onRetry={fetchTracks}
+          />
 
-        {/* Player */}
-        {session && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4">
-            <div className="container mx-auto">
-              <Player onReady={handlePlayerReady} onError={handlePlayerError} />
-            </div>
-          </div>
-        )}
-
-        {/* Add bottom padding to account for fixed player */}
-        <div className="h-32" />
+          {/* Player */}
+          {session && (
+            <>
+              <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
+                <div className="container mx-auto max-w-7xl">
+                  <Player
+                    onReady={handlePlayerReady}
+                    onError={handlePlayerError}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </ErrorBoundary>
   );
