@@ -40,7 +40,7 @@ function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
 
   return (
     <Card
-      className="group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus-visible:scale-[1.02] focus-visible:outline-2 focus-visible:outline-primary bg-card border-border"
+      className="group cursor-pointer transition-all py-0 duration-200 hover:scale-[1.02] hover:shadow-lg focus-visible:scale-[1.02] focus-visible:outline-2 focus-visible:outline-primary bg-card border-border"
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
