@@ -227,6 +227,38 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     };
   }, [isPlaying, player]);
 
+  // Check if current track is liked
+  useEffect(() => {
+    const checkLikedStatus = async () => {
+      if (!session?.accessToken || !currentTrack?.id) {
+        setLiked(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/me/tracks/contains?ids=${currentTrack.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          },
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setLiked(data[0] || false);
+        }
+      } catch (error) {
+        playbackLogger.error('Failed to check like status', error, {
+          trackId: currentTrack.id,
+        });
+      }
+    };
+
+    checkLikedStatus();
+  }, [session?.accessToken, currentTrack?.id]);
+
   const handlePlayPause = useCallback(async () => {
     if (!player) return;
 
@@ -302,9 +334,11 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     }
   }, [player, isMuted, volume]);
 
-  const handleRepeatToggle = useCallback(() => {
-    setRepeatMode((current) => {
-      switch (current) {
+  const handleRepeatToggle = useCallback(async () => {
+    if (!session?.accessToken) return;
+
+    const newMode = (() => {
+      switch (repeatMode) {
         case 'off':
           return 'context';
         case 'context':
@@ -313,11 +347,112 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
         default:
           return 'off';
       }
-    });
+    })();
+
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/me/player/repeat?state=${newMode}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        setRepeatMode(newMode);
+      } else {
+        playbackLogger.error('Failed to set repeat mode', undefined, {
+          status: response.status,
+          mode: newMode,
+        });
+      }
+    } catch (error) {
+      playbackLogger.error('Failed to set repeat mode', error, {
+        mode: newMode,
+      });
+    }
+  }, [session?.accessToken, repeatMode]);
+
+  const handleShuffleToggle = useCallback(async () => {
+    if (!session?.accessToken) return;
+
+    const newState = !shuffleMode;
+
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/me/player/shuffle?state=${newState}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        setShuffleMode(newState);
+      } else {
+        playbackLogger.error('Failed to set shuffle mode', undefined, {
+          status: response.status,
+          enabled: newState,
+        });
+      }
+    } catch (error) {
+      playbackLogger.error('Failed to set shuffle mode', error, {
+        enabled: newState,
+      });
+    }
+  }, [session?.accessToken, shuffleMode]);
+
+  const handleLikeToggle = useCallback(async () => {
+    if (!session?.accessToken || !currentTrack?.id) return;
+
+    try {
+      const method = liked ? 'DELETE' : 'PUT';
+      const response = await fetch(
+        `https://api.spotify.com/v1/me/tracks?ids=${currentTrack.id}`,
+        {
+          method,
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response.ok) {
+        setLiked(!liked);
+      } else {
+        playbackLogger.error('Failed to toggle like status', undefined, {
+          status: response.status,
+          trackId: currentTrack.id,
+        });
+      }
+    } catch (error) {
+      playbackLogger.error('Failed to toggle like status', error, {
+        trackId: currentTrack.id,
+      });
+    }
+  }, [session?.accessToken, currentTrack?.id, liked]);
+
+  const handleQueueOpen = useCallback(() => {
+    // This would typically open a queue sidebar or modal
+    // For now, we'll just log the action
+    console.log('Queue opened');
   }, []);
 
-  const handleShuffleToggle = useCallback(() => {
-    setShuffleMode((current) => !current);
+  const handleDeviceSelection = useCallback(() => {
+    // This would typically open a device selection modal
+    // For now, we'll just log the action
+    console.log('Device selection opened');
+  }, []);
+
+  const handleLyricsToggle = useCallback(() => {
+    // This would typically toggle lyrics view
+    // For now, we'll just log the action
+    console.log('Lyrics toggled');
   }, []);
 
   if (!session) {
@@ -407,7 +542,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 )}
                 radius="full"
                 variant="light"
-                onPress={() => setLiked((v) => !v)}
+                onPress={handleLikeToggle}
                 aria-label={liked ? 'Remove from liked' : 'Add to liked'}
               >
                 <Heart
@@ -522,6 +657,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                   variant="light"
                   className="text-foreground/60 data-[hover=true]:bg-foreground/10"
                   aria-label="Queue"
+                  onPress={handleQueueOpen}
                 >
                   <ListMusic className="w-4 h-4" />
                 </Button>
@@ -531,6 +667,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                   variant="light"
                   className="text-foreground/60 data-[hover=true]:bg-foreground/10"
                   aria-label="Connect to device"
+                  onPress={handleDeviceSelection}
                 >
                   <Monitor className="w-4 h-4" />
                 </Button>
@@ -585,6 +722,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                   variant="light"
                   className="text-foreground/60 data-[hover=true]:bg-foreground/10"
                   aria-label="Lyrics"
+                  onPress={handleLyricsToggle}
                 >
                   <Mic2 className="w-4 h-4" />
                 </Button>
