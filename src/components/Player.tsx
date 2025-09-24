@@ -1,12 +1,9 @@
 'use client';
 
-import { Button, Card, CardBody, Slider } from '@heroui/react';
+import { Button, Card, CardBody, Progress, Slider } from '@heroui/react';
 import { clsx } from '@heroui/shared-utils';
 import {
   Heart,
-  ListMusic,
-  Mic2,
-  Monitor,
   Music,
   PauseCircle,
   PlayCircle,
@@ -69,6 +66,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     'off',
   );
   const [shuffleMode, setShuffleMode] = useState(false);
+  const [useProgressBar, setUseProgressBar] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load Spotify Web Playbook SDK
@@ -437,24 +435,6 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     }
   }, [session?.accessToken, currentTrack?.id, liked]);
 
-  const handleQueueOpen = useCallback(() => {
-    // This would typically open a queue sidebar or modal
-    // For now, we'll just log the action
-    console.log('Queue opened');
-  }, []);
-
-  const handleDeviceSelection = useCallback(() => {
-    // This would typically open a device selection modal
-    // For now, we'll just log the action
-    console.log('Device selection opened');
-  }, []);
-
-  const handleLyricsToggle = useCallback(() => {
-    // This would typically toggle lyrics view
-    // For now, we'll just log the action
-    console.log('Lyrics toggled');
-  }, []);
-
   if (!session) {
     return null;
   }
@@ -553,26 +533,46 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
             </div>
 
             <div className="flex flex-col mt-3 gap-1">
-              <Slider
-                aria-label="Music progress"
-                classNames={{
-                  base: 'max-w-full',
-                  filler: 'bg-success',
-                  thumb: [
-                    'transition-size',
-                    'bg-success',
-                    'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
-                    'data-[dragging=true]:w-7 data-[dragging=true]:h-7 data-[dragging=true]:after:h-6 data-[dragging=true]:after:w-6',
-                  ],
-                  track: 'bg-default-500/30',
-                }}
-                color="success"
-                size="sm"
-                step={1000}
-                maxValue={duration}
-                value={position}
-                onChange={handleSeek}
-              />
+              {/* Timeline Control - Toggle between Progress and Slider */}
+              <div
+                className="cursor-pointer"
+                onClick={() => setUseProgressBar(!useProgressBar)}
+                title="Click to toggle between Progress bar and Slider"
+              >
+                {useProgressBar ? (
+                  <Progress
+                    aria-label="Music progress"
+                    classNames={{
+                      indicator: 'bg-success',
+                      track: 'bg-default-500/30',
+                    }}
+                    color="success"
+                    size="sm"
+                    value={duration > 0 ? (position / duration) * 100 : 0}
+                  />
+                ) : (
+                  <Slider
+                    aria-label="Music progress"
+                    classNames={{
+                      base: 'max-w-full',
+                      filler: 'bg-success',
+                      thumb: [
+                        'transition-size',
+                        'bg-success',
+                        'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
+                        'data-[dragging=true]:w-7 data-[dragging=true]:h-7 data-[dragging=true]:after:h-6 data-[dragging=true]:after:w-6',
+                      ],
+                      track: 'bg-default-500/30',
+                    }}
+                    color="success"
+                    size="sm"
+                    step={1000}
+                    maxValue={duration}
+                    value={position}
+                    onChange={handleSeek}
+                  />
+                )}
+              </div>
               <div className="flex justify-between">
                 <p className="text-sm">{formatDuration(position)}</p>
                 <p className="text-sm text-foreground/50">
@@ -647,86 +647,45 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               </Button>
             </div>
 
-            {/* Bottom controls row */}
-            <div className="flex items-center justify-between mt-4">
-              {/* Left side - Additional controls */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
-                  aria-label="Queue"
-                  onPress={handleQueueOpen}
-                >
-                  <ListMusic className="w-4 h-4" />
-                </Button>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
-                  aria-label="Connect to device"
-                  onPress={handleDeviceSelection}
-                >
-                  <Monitor className="w-4 h-4" />
-                </Button>
-              </div>
+            {/* Volume control */}
+            <div className="flex items-center justify-center space-x-2 mt-4">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onClick={handleMuteToggle}
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
+                className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4" />
+                ) : volume > 0.5 ? (
+                  <Volume2 className="w-4 h-4" />
+                ) : (
+                  <Volume1 className="w-4 h-4" />
+                )}
+              </Button>
 
-              {/* Center - Volume control */}
-              <div className="flex items-center space-x-2 flex-1 max-w-40 mx-4">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onClick={handleMuteToggle}
-                  aria-label={isMuted ? 'Unmute' : 'Mute'}
-                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-4 h-4" />
-                  ) : volume > 0.5 ? (
-                    <Volume2 className="w-4 h-4" />
-                  ) : (
-                    <Volume1 className="w-4 h-4" />
-                  )}
-                </Button>
-
-                <Slider
-                  size="sm"
-                  step={1}
-                  maxValue={100}
-                  value={isMuted ? 0 : volume * 100}
-                  onChange={handleVolumeChange}
-                  className="flex-1"
-                  aria-label="Volume"
-                  classNames={{
-                    base: 'max-w-full',
-                    filler: 'bg-success',
-                    thumb: [
-                      'transition-size',
-                      'bg-success',
-                      'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
-                      'data-[dragging=true]:w-4 data-[dragging=true]:h-4',
-                    ],
-                    track: 'bg-default-500/30',
-                  }}
-                />
-              </div>
-
-              {/* Right side - Additional controls */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
-                  aria-label="Lyrics"
-                  onPress={handleLyricsToggle}
-                >
-                  <Mic2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <Slider
+                size="sm"
+                step={1}
+                maxValue={100}
+                value={isMuted ? 0 : volume * 100}
+                onChange={handleVolumeChange}
+                className="flex-1 max-w-32"
+                aria-label="Volume"
+                classNames={{
+                  base: 'max-w-full',
+                  filler: 'bg-success',
+                  thumb: [
+                    'transition-size',
+                    'bg-success',
+                    'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
+                    'data-[dragging=true]:w-4 data-[dragging=true]:h-4',
+                  ],
+                  track: 'bg-default-500/30',
+                }}
+              />
             </div>
           </div>
         </div>
