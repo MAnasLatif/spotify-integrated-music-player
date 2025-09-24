@@ -44,13 +44,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground transition-colors duration-300`}
       >
         <Providers>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col min-h-screen bg-background">
             <Header />
-            <main className="flex-1 container mx-auto px-4 py-6">
-              {children}
+            <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8 xl:px-12">
+              <div className="max-w-7xl mx-auto">{children}</div>
             </main>
           </div>
         </Providers>

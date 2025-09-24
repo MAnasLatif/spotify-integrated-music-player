@@ -32,7 +32,6 @@ interface AuthButtonProps {
 export default function AuthButton({
   className,
   size = 'md',
-  variant = 'solid',
   showText = true,
 }: AuthButtonProps) {
   const { data: session, status } = useSession();
@@ -48,9 +47,9 @@ export default function AuthButton({
   if (status === 'loading') {
     return (
       <Button
-        className={className}
+        className={`${className || ''}`}
         size={size}
-        variant={variant}
+        variant="ghost"
         disabled
         startContent={<Loader2 className="h-4 w-4 animate-spin" />}
         aria-label="Loading authentication status"
@@ -63,11 +62,10 @@ export default function AuthButton({
   if (session) {
     return (
       <Button
-        className={className}
+        className={`text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border-border transition-all ${className || ''}`}
         size={size}
-        variant={variant}
-        color="danger"
-        onClick={handleSignOut}
+        variant="bordered"
+        onPress={handleSignOut}
         startContent={<LogOut className="h-4 w-4" />}
         aria-label="Sign out of Spotify"
       >
@@ -78,15 +76,13 @@ export default function AuthButton({
 
   return (
     <Button
-      className={className}
+      className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0 rounded-2xl ${className || ''}`}
       size={size}
-      variant={variant}
-      color="primary"
-      onClick={handleSignIn}
+      onPress={handleSignIn}
       startContent={<LogIn className="h-4 w-4" />}
       aria-label="Sign in with Spotify"
     >
-      {showText && 'Sign In'}
+      {showText && 'Sign In with Spotify'}
     </Button>
   );
 }

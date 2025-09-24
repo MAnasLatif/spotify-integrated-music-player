@@ -19,6 +19,7 @@ import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
 import Player from '@/components/Player';
+import { useToastContext } from '@/components/ToastProvider';
 import TrackList from '@/components/TrackList';
 import { logger } from '@/lib/logger';
 import { formatNumber } from '@/lib/utils';
@@ -28,6 +29,7 @@ export default function PlaylistPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { showToast } = useToastContext();
   const playlistId = params.id as string;
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
@@ -87,11 +89,16 @@ export default function PlaylistPage() {
       const message =
         error instanceof Error ? error.message : 'Failed to load tracks';
       setError(message);
+      showToast({
+        title: 'Failed to load tracks',
+        description: message,
+        variant: 'error',
+      });
       logger.error('Failed to fetch tracks', error, { playlistId });
     } finally {
       setTracksLoading(false);
     }
-  }, [session?.accessToken, playlistId]);
+  }, [session?.accessToken, playlistId, showToast]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -141,6 +148,11 @@ export default function PlaylistPage() {
       const message =
         error instanceof Error ? error.message : 'Failed to play track';
       setPlayerError(message);
+      showToast({
+        title: 'Playback error',
+        description: message,
+        variant: 'error',
+      });
       logger.error('Failed to play track', error, { trackUri, deviceId });
     }
   };

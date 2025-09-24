@@ -14,6 +14,8 @@ import { HeroUIProvider } from '@heroui/react';
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
+import { ToastProvider } from '@/components/ToastProvider';
+
 interface ProvidersProps {
   children: React.ReactNode;
 }
@@ -28,7 +30,7 @@ export function Providers({ children }: ProvidersProps) {
           themes={['light', 'dark']}
           enableSystem
         >
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </NextThemesProvider>
       </HeroUIProvider>
     </SessionProvider>

@@ -39,21 +39,35 @@ export default function Header({ className }: HeaderProps) {
   };
 
   return (
-    <Navbar className={className} maxWidth="full" position="sticky">
-      <NavbarBrand>
-        <Music className="h-6 w-6 mr-2" aria-hidden="true" />
-        <p className="font-bold text-inherit">Spotify Player</p>
+    <Navbar
+      className={`border-b border-border bg-card/95 backdrop-blur p-1 supports-[backdrop-filter]:bg-card/95 ${className || ''}`}
+      maxWidth="full"
+      position="sticky"
+      height="4rem"
+    >
+      <NavbarBrand className="gap-3">
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+          <Music className="h-5 w-5 text-white" aria-hidden="true" />
+        </div>
+        <div className="flex flex-col">
+          <p className="font-bold text-lg text-foreground">Spotify Player</p>
+          <p className="text-xs text-muted-foreground">Web Music Player</p>
+        </div>
       </NavbarBrand>
 
-      <NavbarContent justify="end">
+      <NavbarContent justify="end" className="gap-4">
         <NavbarItem>
           {status === 'loading' ? (
-            <div className="h-10 w-24 animate-pulse bg-gray-200 rounded-lg" />
+            <div className="h-10 w-32 animate-pulse bg-muted rounded-lg" />
           ) : session?.user ? (
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium">{session.user.name}</p>
-                <p className="text-xs text-gray-500">{session.user.email}</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden md:block">
+                <p className="text-sm font-medium text-foreground leading-tight">
+                  {session.user.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {session.user.email}
+                </p>
               </div>
 
               <Avatar
@@ -61,28 +75,30 @@ export default function Header({ className }: HeaderProps) {
                 name={
                   session.user.name ? getInitials(session.user.name) : undefined
                 }
-                size="sm"
-                className="shrink-0"
+                size="md"
+                className="shrink-0 ring-2 ring-border"
               />
 
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleSignOut}
+                onPress={handleSignOut}
                 startContent={<LogOut className="h-4 w-4" />}
                 aria-label="Sign out"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-2 rounded-lg transition-colors"
               >
                 <span className="hidden sm:inline">Sign Out</span>
               </Button>
             </div>
           ) : (
             <Button
-              color="primary"
-              onClick={handleSignIn}
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2 rounded-2xl"
+              onPress={handleSignIn}
               startContent={<LogIn className="h-4 w-4" />}
               aria-label="Sign in with Spotify"
+              size="md"
             >
-              Sign In
+              Sign In with Spotify
             </Button>
           )}
         </NavbarItem>

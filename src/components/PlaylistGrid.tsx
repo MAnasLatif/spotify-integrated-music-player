@@ -48,7 +48,7 @@ function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
 
   return (
     <Card
-      className="cursor-pointer transition-transform hover:scale-105 focus-visible:scale-105 focus-visible:outline-2 focus-visible:outline-primary"
+      className="group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus-visible:scale-[1.02] focus-visible:outline-2 focus-visible:outline-primary bg-card border-border"
       isPressable
       onPress={handleClick}
       role="button"
@@ -57,33 +57,39 @@ function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
       aria-label={`Open ${playlist.name} playlist with ${playlist.tracks.total} tracks`}
     >
       <CardBody className="p-0">
-        <div className="aspect-square relative bg-gradient-to-br from-gray-200 to-gray-300 rounded-t-lg overflow-hidden">
+        <div className="aspect-square relative bg-gradient-to-br from-muted to-muted/80 rounded-t-lg overflow-hidden">
           {imageUrl && !imageError ? (
             <Image
               src={imageUrl}
               alt={`${playlist.name} playlist cover`}
               fill
-              className="object-cover"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 50vw, 25vw"
               onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music className="h-12 w-12 text-gray-400" aria-hidden="true" />
+              <Music
+                className="h-12 w-12 text-muted-foreground group-hover:text-green-500 transition-colors"
+                aria-hidden="true"
+              />
             </div>
           )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
+        ß
       </CardBody>
 
-      <CardFooter className="flex flex-col items-start p-3 gap-1">
-        <h3 className="font-medium text-sm text-left w-full">
+      <CardFooter className="flex flex-col items-start p-4 gap-2">
+        <h3 className="font-semibold text-sm text-left w-full text-foreground group-hover:text-green-500 transition-colors">
           {truncateText(playlist.name, 40)}
         </h3>
-        <p className="text-xs text-gray-500">
-          {formatNumber(playlist.tracks.total)} tracks
+        <p className="text-xs text-muted-foreground">
+          {formatNumber(playlist.tracks.total)} track
+          {playlist.tracks.total !== 1 ? 's' : ''}
         </p>
         {playlist.description && (
-          <p className="text-xs text-gray-400 line-clamp-2">
+          <p className="text-xs text-muted-foreground/80 line-clamp-2">
             {truncateText(playlist.description, 60)}
           </p>
         )}

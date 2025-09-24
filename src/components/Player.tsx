@@ -278,11 +278,11 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
   if (error) {
     return (
-      <Card className={className}>
+      <Card className={`bg-card border-border ${className || ''}`}>
         <CardBody>
-          <div className="text-center py-4">
-            <Music className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="text-center py-6">
+            <Music className="h-10 w-10 text-red-400 mx-auto mb-3" />
+            <p className="text-sm text-red-600 font-medium">{error}</p>
           </div>
         </CardBody>
       </Card>
@@ -291,12 +291,14 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
   if (!isReady) {
     return (
-      <Card className={className}>
+      <Card className={`bg-card border-border ${className || ''}`}>
         <CardBody>
-          <div className="text-center py-4">
+          <div className="text-center py-6">
             <div className="animate-pulse">
-              <Music className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">Initializing player...</p>
+              <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground font-medium">
+                Initializing player...
+              </p>
             </div>
           </div>
         </CardBody>
@@ -305,34 +307,34 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
   }
 
   return (
-    <Card className={className}>
-      <CardBody className="p-4">
-        <div className="flex flex-col space-y-4">
+    <Card className={`bg-card border-border shadow-lg ${className || ''}`}>
+      <CardBody className="p-6">
+        <div className="flex flex-col space-y-6">
           {/* Current track info */}
           {currentTrack && (
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center overflow-hidden shrink-0">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden shrink-0 shadow-md">
                 {currentTrack.album?.images?.[0]?.url ? (
                   <Image
                     src={currentTrack.album.images[0].url}
                     alt={`${currentTrack.album.name} cover`}
-                    width={48}
-                    height={48}
+                    width={64}
+                    height={64}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Music className="h-6 w-6 text-gray-400" />
+                  <Music className="h-8 w-8 text-muted-foreground" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <p
-                  className="font-medium text-sm truncate"
+                  className="font-semibold text-foreground text-base truncate"
                   title={currentTrack.name}
                 >
                   {currentTrack.name}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-sm text-muted-foreground truncate">
                   {currentTrack.artists
                     ?.map((artist) => artist.name)
                     .join(', ')}
@@ -342,17 +344,22 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
           )}
 
           {/* Progress bar */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Slider
-              size="sm"
+              size="md"
               step={1000}
               maxValue={duration}
               value={position}
               onChange={handleSeek}
               className="w-full"
               aria-label="Track progress"
+              classNames={{
+                track: 'border-border',
+                filler: 'bg-green-500',
+                thumb: 'bg-green-500 border-green-500 shadow-lg',
+              }}
             />
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium">
               <span>{formatDuration(position)}</span>
               <span>{formatDuration(duration)}</span>
             </div>
@@ -360,26 +367,29 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
           {/* Controls */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <Button
                 isIconOnly
                 variant="ghost"
                 onClick={handlePrevious}
                 aria-label="Previous track"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                size="lg"
               >
                 <SkipBack className="h-5 w-5" />
               </Button>
 
               <Button
                 isIconOnly
-                color="primary"
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all"
                 onClick={handlePlayPause}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
+                size="lg"
               >
                 {isPlaying ? (
-                  <Pause className="h-5 w-5 fill-current" />
+                  <Pause className="h-6 w-6 fill-current" />
                 ) : (
-                  <Play className="h-5 w-5 fill-current" />
+                  <Play className="h-6 w-6 fill-current ml-0.5" />
                 )}
               </Button>
 
@@ -388,19 +398,22 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 variant="ghost"
                 onClick={handleNext}
                 aria-label="Next track"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                size="lg"
               >
                 <SkipForward className="h-5 w-5" />
               </Button>
             </div>
 
             {/* Volume control */}
-            <div className="flex items-center space-x-2 w-32">
+            <div className="flex items-center space-x-3 w-40">
               <Button
                 isIconOnly
-                size="sm"
+                size="md"
                 variant="ghost"
                 onClick={handleMuteToggle}
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
+                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               >
                 {isMuted ? (
                   <VolumeX className="h-4 w-4" />
@@ -417,6 +430,11 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 onChange={handleVolumeChange}
                 className="flex-1"
                 aria-label="Volume"
+                classNames={{
+                  track: 'border-border',
+                  filler: 'bg-green-500',
+                  thumb: 'bg-green-500 border-green-500',
+                }}
               />
             </div>
           </div>
