@@ -1,10 +1,14 @@
 'use client';
 
-import { Button, Card, CardBody, Slider } from '@heroui/react';
+import { Button, Card, CardBody, Progress, Slider } from '@heroui/react';
+import { clsx } from '@heroui/shared-utils';
 import {
+  Heart,
   Music,
-  Pause,
-  Play,
+  PauseCircle,
+  PlayCircle,
+  Repeat,
+  Shuffle,
   SkipBack,
   SkipForward,
   Volume2,
@@ -55,6 +59,7 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sdkLoaded, setSdkLoaded] = useState(false);
+  const [liked, setLiked] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load Spotify Web Playbook SDK
@@ -243,22 +248,6 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     }
   }, [player]);
 
-  const handleSeek = useCallback(
-    async (value: number | number[]) => {
-      if (!player) return;
-
-      const seekPosition = Array.isArray(value) ? value[0] : value;
-
-      try {
-        await player.seek(seekPosition);
-        setPosition(seekPosition);
-      } catch (error) {
-        playbackLogger.error('Failed to seek', error);
-      }
-    },
-    [player],
-  );
-
   const handleVolumeChange = useCallback(
     async (value: number | number[]) => {
       if (!player) return;
@@ -323,113 +312,142 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
   }
 
   return (
-    <Card className={`bg-card border-border shadow-lg ${className || ''}`}>
-      <CardBody className="p-6">
-        <div className="flex flex-col space-y-6">
-          {/* Current track info */}
-          {currentTrack && (
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                {currentTrack.album?.images?.[0]?.url ? (
-                  <Image
-                    src={currentTrack.album.images[0].url}
-                    alt={`${currentTrack.album.name} cover`}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Music className="h-8 w-8 text-muted-foreground" />
-                )}
+    <Card
+      isBlurred
+      className={clsx(
+        'border-none bg-background/60 dark:bg-default-100/50',
+        className,
+      )}
+      shadow="sm"
+    >
+      <CardBody>
+        <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center">
+          <div className="relative col-span-6 md:col-span-4">
+            {currentTrack?.album?.images?.[0]?.url ? (
+              <Image
+                alt="Album cover"
+                className="object-cover shadow-black/20 shadow-lg"
+                height={200}
+                src={currentTrack.album.images[0].url}
+                width={200}
+              />
+            ) : (
+              <div className="w-[200px] h-[200px] bg-default-100 rounded-lg flex items-center justify-center shadow-lg">
+                <Music className="h-16 w-16 text-default-400" />
               </div>
-
-              <div className="flex-1 min-w-0">
-                <p
-                  className="font-semibold text-foreground text-base truncate"
-                  title={currentTrack.name}
-                >
-                  {currentTrack.name}
-                </p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {currentTrack.artists
-                    ?.map((artist) => artist.name)
-                    .join(', ')}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Progress bar */}
-          <div className="space-y-3">
-            <Slider
-              size="md"
-              step={1000}
-              maxValue={duration}
-              value={position}
-              onChange={handleSeek}
-              className="w-full"
-              aria-label="Track progress"
-              classNames={{
-                track: 'border-border',
-                filler: 'bg-green-500',
-                thumb: 'bg-green-500 border-green-500 shadow-lg',
-              }}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground font-medium">
-              <span>{formatDuration(position)}</span>
-              <span>{formatDuration(duration)}</span>
-            </div>
+            )}
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex flex-col col-span-6 md:col-span-8">
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col gap-0">
+                <h3 className="font-semibold text-foreground/90">
+                  {currentTrack?.album?.name || 'No album'}
+                </h3>
+                <p className="text-sm text-foreground/80">
+                  {currentTrack ? '1 Track' : 'No tracks'}
+                </p>
+                <h1 className="text-lg font-medium mt-2">
+                  {currentTrack?.name || 'No track playing'}
+                </h1>
+                <p className="text-sm text-foreground/60">
+                  {currentTrack?.artists
+                    ?.map((artist) => artist.name)
+                    .join(', ') || 'Unknown artist'}
+                </p>
+              </div>
               <Button
                 isIconOnly
-                variant="ghost"
-                onClick={handlePrevious}
-                aria-label="Previous track"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                size="lg"
+                className="text-default-900/60 data-[hover=true]:bg-foreground/10 -translate-y-2 translate-x-2"
+                radius="full"
+                variant="light"
+                onPress={() => setLiked((v) => !v)}
               >
-                <SkipBack className="h-5 w-5" />
-              </Button>
-
-              <Button
-                isIconOnly
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all"
-                onClick={handlePlayPause}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                size="lg"
-              >
-                {isPlaying ? (
-                  <Pause className="h-6 w-6 fill-current" />
-                ) : (
-                  <Play className="h-6 w-6 fill-current ml-0.5" />
-                )}
-              </Button>
-
-              <Button
-                isIconOnly
-                variant="ghost"
-                onClick={handleNext}
-                aria-label="Next track"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                size="lg"
-              >
-                <SkipForward className="h-5 w-5" />
+                <Heart
+                  className={liked ? '[&>path]:stroke-transparent' : ''}
+                  fill={liked ? 'currentColor' : 'none'}
+                />
               </Button>
             </div>
 
-            {/* Volume control */}
-            <div className="flex items-center space-x-3 w-40">
+            <div className="flex flex-col mt-3 gap-1">
+              <Progress
+                aria-label="Music progress"
+                classNames={{
+                  indicator: 'bg-default-800 dark:bg-white',
+                  track: 'bg-default-500/30',
+                }}
+                color="default"
+                size="sm"
+                value={duration > 0 ? (position / duration) * 100 : 0}
+              />
+              <div className="flex justify-between">
+                <p className="text-sm">{formatDuration(position)}</p>
+                <p className="text-sm text-foreground/50">
+                  {formatDuration(duration)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex w-full items-center justify-center mt-4">
               <Button
                 isIconOnly
-                size="md"
-                variant="ghost"
+                className="data-[hover=true]:bg-foreground/10"
+                radius="full"
+                variant="light"
+              >
+                <Repeat className="text-foreground/80" />
+              </Button>
+              <Button
+                isIconOnly
+                className="data-[hover=true]:bg-foreground/10"
+                radius="full"
+                variant="light"
+                onClick={handlePrevious}
+              >
+                <SkipBack />
+              </Button>
+              <Button
+                isIconOnly
+                className="w-auto h-auto data-[hover=true]:bg-foreground/10"
+                radius="full"
+                variant="light"
+                onClick={handlePlayPause}
+              >
+                {isPlaying ? (
+                  <PauseCircle size={54} />
+                ) : (
+                  <PlayCircle size={54} />
+                )}
+              </Button>
+              <Button
+                isIconOnly
+                className="data-[hover=true]:bg-foreground/10"
+                radius="full"
+                variant="light"
+                onClick={handleNext}
+              >
+                <SkipForward />
+              </Button>
+              <Button
+                isIconOnly
+                className="data-[hover=true]:bg-foreground/10"
+                radius="full"
+                variant="light"
+              >
+                <Shuffle className="text-foreground/80" />
+              </Button>
+            </div>
+
+            {/* Volume control - moved to bottom */}
+            <div className="flex items-center justify-center space-x-3 mt-4">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
                 onClick={handleMuteToggle}
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                className="text-foreground/60 data-[hover=true]:bg-foreground/10"
               >
                 {isMuted ? (
                   <VolumeX className="h-4 w-4" />
@@ -444,12 +462,12 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 maxValue={100}
                 value={isMuted ? 0 : volume * 100}
                 onChange={handleVolumeChange}
-                className="flex-1"
+                className="flex-1 max-w-32"
                 aria-label="Volume"
                 classNames={{
-                  track: 'border-border',
-                  filler: 'bg-green-500',
-                  thumb: 'bg-green-500 border-green-500',
+                  track: 'bg-default-500/30',
+                  filler: 'bg-default-800 dark:bg-white',
+                  thumb: 'bg-default-800 dark:bg-white',
                 }}
               />
             </div>
