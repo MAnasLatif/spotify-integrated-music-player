@@ -10,7 +10,7 @@
 
 import '@/styles/globals.css';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
 import Header from '@/components/Header';
@@ -27,12 +27,16 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'Spotify Music Player',
   description: 'A modern Spotify-integrated music player built with Next.js 15',
   keywords: ['spotify', 'music', 'player', 'nextjs', 'streaming'],
   authors: [{ name: 'Your Name' }],
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
 };
 
