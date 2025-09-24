@@ -1,10 +1,11 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { AlertCircle, Home, RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Suspense } from 'react';
+
+import { Button } from '@/components/ui/button';
 
 const ERROR_MESSAGES = {
   Configuration: 'There is a problem with the server configuration.',
@@ -42,20 +43,20 @@ function AuthErrorContent() {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
-            color="primary"
             onClick={handleRetry}
-            startContent={<RefreshCw className="h-4 w-4" />}
             aria-label="Retry authentication"
+            className="bg-green-500 hover:bg-green-600 text-white"
           >
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
 
           <Button
-            variant="bordered"
+            variant="outline"
             onClick={handleGoHome}
-            startContent={<Home className="h-4 w-4" />}
             aria-label="Go to home page"
           >
+            <Home className="h-4 w-4 mr-2" />
             Go Home
           </Button>
         </div>

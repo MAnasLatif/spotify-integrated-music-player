@@ -1,7 +1,5 @@
 'use client';
 
-import { Button, Card, CardBody, Progress, Slider } from '@heroui/react';
-import { clsx } from '@heroui/shared-utils';
 import {
   Heart,
   Music,
@@ -20,7 +18,12 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { playbackLogger } from '@/lib/logger';
+import { cn } from '@/lib/utils';
 import { formatDuration } from '@/lib/utils';
 import type {
   SpotifyPlaybackState,
@@ -441,21 +444,21 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
   if (error) {
     return (
-      <Card className={`bg-card border-border ${className || ''}`}>
-        <CardBody>
+      <Card className={cn('bg-card border-border', className)}>
+        <CardContent>
           <div className="text-center py-6">
             <Music className="h-10 w-10 text-red-400 mx-auto mb-3" />
             <p className="text-sm text-red-600 font-medium">{error}</p>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     );
   }
 
   if (!isReady) {
     return (
-      <Card className={`bg-card border-border ${className || ''}`}>
-        <CardBody>
+      <Card className={cn('bg-card border-border', className)}>
+        <CardContent>
           <div className="text-center py-6">
             <div className="animate-pulse">
               <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
@@ -464,21 +467,19 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               </p>
             </div>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     );
   }
 
   return (
     <Card
-      isBlurred
-      className={clsx(
-        'border-none bg-background/60 dark:bg-default-100/50',
+      className={cn(
+        'border-none bg-background/60 dark:bg-default-100/50 backdrop-blur-sm shadow-sm',
         className,
       )}
-      shadow="sm"
     >
-      <CardBody>
+      <CardContent>
         <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center">
           <div className="relative col-span-6 md:col-span-4">
             {currentTrack?.album?.images?.[0]?.url ? (
@@ -515,14 +516,13 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 </p>
               </div>
               <Button
-                isIconOnly
-                className={clsx(
-                  'data-[hover=true]:bg-foreground/10 -translate-y-2 translate-x-2 transition-colors',
+                size="icon"
+                className={cn(
+                  'hover:bg-foreground/10 -translate-y-2 translate-x-2 transition-colors rounded-full',
                   liked ? 'text-red-500' : 'text-foreground/60',
                 )}
-                radius="full"
-                variant="light"
-                onPress={handleLikeToggle}
+                variant="ghost"
+                onClick={handleLikeToggle}
                 aria-label={liked ? 'Remove from liked' : 'Add to liked'}
               >
                 <Heart
@@ -541,35 +541,16 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               >
                 {useProgressBar ? (
                   <Progress
-                    aria-label="Music progress"
-                    classNames={{
-                      indicator: 'bg-success',
-                      track: 'bg-default-500/30',
-                    }}
-                    color="success"
-                    size="sm"
+                    className="bg-secondary"
                     value={duration > 0 ? (position / duration) * 100 : 0}
                   />
                 ) : (
                   <Slider
-                    aria-label="Music progress"
-                    classNames={{
-                      base: 'max-w-full',
-                      filler: 'bg-success',
-                      thumb: [
-                        'transition-size',
-                        'bg-success',
-                        'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
-                        'data-[dragging=true]:w-7 data-[dragging=true]:h-7 data-[dragging=true]:after:h-6 data-[dragging=true]:after:w-6',
-                      ],
-                      track: 'bg-default-500/30',
-                    }}
-                    color="success"
-                    size="sm"
+                    className="w-full"
+                    max={duration}
                     step={1000}
-                    maxValue={duration}
-                    value={position}
-                    onChange={handleSeek}
+                    value={[position]}
+                    onValueChange={(value) => handleSeek(value[0])}
                   />
                 )}
               </div>
@@ -583,32 +564,29 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
             <div className="flex w-full items-center justify-center mt-4 gap-2">
               <Button
-                isIconOnly
-                className={clsx(
-                  'data-[hover=true]:bg-foreground/10 transition-colors',
-                  shuffleMode ? 'text-success' : 'text-foreground/60',
+                size="icon"
+                className={cn(
+                  'hover:bg-foreground/10 transition-colors rounded-full',
+                  shuffleMode ? 'text-green-500' : 'text-foreground/60',
                 )}
-                radius="full"
-                variant="light"
-                onPress={handleShuffleToggle}
+                variant="ghost"
+                onClick={handleShuffleToggle}
                 aria-label="Toggle shuffle"
               >
                 <Shuffle className="w-4 h-4" />
               </Button>
               <Button
-                isIconOnly
-                className="data-[hover=true]:bg-foreground/10 text-foreground/80"
-                radius="full"
-                variant="light"
+                size="icon"
+                className="hover:bg-foreground/10 text-foreground/80 rounded-full"
+                variant="ghost"
                 onClick={handlePrevious}
                 aria-label="Previous track"
               >
                 <SkipBack className="w-5 h-5" />
               </Button>
               <Button
-                isIconOnly
-                className="w-12 h-12 bg-white text-black data-[hover=true]:bg-white/90 data-[hover=true]:scale-105 transition-all shadow-lg"
-                radius="full"
+                size="icon"
+                className="w-12 h-12 bg-white text-black hover:bg-white/90 hover:scale-105 transition-all shadow-lg rounded-full"
                 onClick={handlePlayPause}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
@@ -619,24 +597,24 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
                 )}
               </Button>
               <Button
-                isIconOnly
-                className="data-[hover=true]:bg-foreground/10 text-foreground/80"
-                radius="full"
-                variant="light"
+                size="icon"
+                className="hover:bg-foreground/10 text-foreground/80 rounded-full"
+                variant="ghost"
                 onClick={handleNext}
                 aria-label="Next track"
               >
                 <SkipForward className="w-5 h-5" />
               </Button>
               <Button
-                isIconOnly
-                className={clsx(
-                  'data-[hover=true]:bg-foreground/10 transition-colors',
-                  repeatMode !== 'off' ? 'text-success' : 'text-foreground/60',
+                size="icon"
+                className={cn(
+                  'hover:bg-foreground/10 transition-colors rounded-full',
+                  repeatMode !== 'off'
+                    ? 'text-green-500'
+                    : 'text-foreground/60',
                 )}
-                radius="full"
-                variant="light"
-                onPress={handleRepeatToggle}
+                variant="ghost"
+                onClick={handleRepeatToggle}
                 aria-label="Toggle repeat"
               >
                 {repeatMode === 'track' ? (
@@ -650,12 +628,11 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
             {/* Volume control */}
             <div className="flex items-center justify-center space-x-2 mt-4">
               <Button
-                isIconOnly
                 size="sm"
-                variant="light"
+                variant="ghost"
                 onClick={handleMuteToggle}
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
-                className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+                className="text-foreground/60 hover:bg-foreground/10"
               >
                 {isMuted ? (
                   <VolumeX className="w-4 h-4" />
@@ -667,29 +644,17 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               </Button>
 
               <Slider
-                size="sm"
                 step={1}
-                maxValue={100}
-                value={isMuted ? 0 : volume * 100}
-                onChange={handleVolumeChange}
+                max={100}
+                value={[isMuted ? 0 : volume * 100]}
+                onValueChange={(value) => handleVolumeChange(value[0])}
                 className="flex-1 max-w-32"
                 aria-label="Volume"
-                classNames={{
-                  base: 'max-w-full',
-                  filler: 'bg-success',
-                  thumb: [
-                    'transition-size',
-                    'bg-success',
-                    'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
-                    'data-[dragging=true]:w-4 data-[dragging=true]:h-4',
-                  ],
-                  track: 'bg-default-500/30',
-                }}
               />
             </div>
           </div>
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }

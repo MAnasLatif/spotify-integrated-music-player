@@ -1,8 +1,9 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import React from 'react';
+
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: React.ReactNode;
@@ -45,14 +46,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
               We encountered an error while loading this page. Please try again.
             </p>
             <div className="space-x-4">
-              <Button
-                onClick={() => window.location.reload()}
-                startContent={<RefreshCw className="h-4 w-4" />}
-              >
+              <Button onClick={() => window.location.reload()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Page
               </Button>
               <Button
-                variant="bordered"
+                variant="outline"
                 onClick={() => (window.location.href = '/')}
               >
                 Go Home

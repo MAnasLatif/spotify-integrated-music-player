@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { Music, RefreshCw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import AuthButton from '@/components/AuthButton';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import { useToastContext } from '@/components/ToastProvider';
+import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 import type { SpotifyPlaylist } from '@/types/spotify';
 
@@ -92,7 +92,7 @@ export default function Home() {
           <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-2xl">
             <Music className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-4 bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
             Welcome to Spotify Player
           </h1>
           <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
@@ -125,7 +125,7 @@ export default function Home() {
           <p className="text-muted-foreground mb-6 leading-relaxed">
             Your Spotify session has expired. Please sign in again.
           </p>
-          <AuthButton size="md" />
+          <AuthButton size="default" />
         </div>
       </div>
     );
@@ -146,18 +146,16 @@ export default function Home() {
 
         {playlists.length > 0 && (
           <Button
-            variant="bordered"
-            size="md"
+            variant="outline"
+            size="default"
             onClick={fetchPlaylists}
             disabled={loading}
-            startContent={
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-            }
             aria-label="Refresh playlists"
             className="border-border hover:bg-muted hover:text-foreground transition-colors"
           >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+            />
             Refresh
           </Button>
         )}

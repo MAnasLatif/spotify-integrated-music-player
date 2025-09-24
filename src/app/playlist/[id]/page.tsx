@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { ArrowLeft, Music, Play, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -11,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Player from '@/components/Player';
 import { useToastContext } from '@/components/ToastProvider';
 import TrackList from '@/components/TrackList';
+import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 import { formatNumber } from '@/lib/utils';
 import type { SpotifyPlaylist, SpotifyPlaylistTrack } from '@/types/spotify';
@@ -307,7 +307,7 @@ export default function PlaylistPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button
-            isIconOnly
+            size="icon"
             variant="ghost"
             onClick={() => router.back()}
             aria-label="Go back"
@@ -375,7 +375,7 @@ export default function PlaylistPage() {
         {/* Navigation */}
         <div className="flex items-center gap-4">
           <Button
-            isIconOnly
+            size="icon"
             variant="ghost"
             onClick={() => router.back()}
             aria-label="Go back"
@@ -430,9 +430,7 @@ export default function PlaylistPage() {
 
               <div className="flex items-center gap-4">
                 <Button
-                  color="primary"
                   size="lg"
-                  startContent={<Play className="h-5 w-5 fill-current" />}
                   onClick={() => {
                     // Play first track if available
                     if (tracks.length > 0 && tracks[0].track.uri) {
@@ -440,20 +438,20 @@ export default function PlaylistPage() {
                     }
                   }}
                   disabled={!deviceId || tracks.length === 0}
+                  className="bg-green-500 hover:bg-green-600 text-white"
                 >
+                  <Play className="h-5 w-5 fill-current mr-2" />
                   Play
                 </Button>
 
                 <Button
-                  variant="bordered"
+                  variant="outline"
                   onClick={fetchTracks}
                   disabled={tracksLoading}
-                  startContent={
-                    <RefreshCw
-                      className={`h-4 w-4 ${tracksLoading ? 'animate-spin' : ''}`}
-                    />
-                  }
                 >
+                  <RefreshCw
+                    className={`h-4 w-4 mr-2 ${tracksLoading ? 'animate-spin' : ''}`}
+                  />
                   Refresh
                 </Button>
               </div>

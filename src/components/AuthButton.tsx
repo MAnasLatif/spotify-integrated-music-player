@@ -1,26 +1,26 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { Loader2, LogIn, LogOut } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 
+import { Button } from '@/components/ui/button';
+
 interface AuthButtonProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'lg' | 'default' | 'icon';
   variant?:
-    | 'solid'
-    | 'bordered'
-    | 'light'
-    | 'flat'
-    | 'faded'
-    | 'shadow'
-    | 'ghost';
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
   showText?: boolean;
 }
 
 export default function AuthButton({
   className,
-  size = 'md',
+  size = 'default',
   showText = true,
 }: AuthButtonProps) {
   const { data: session, status } = useSession();
@@ -40,9 +40,9 @@ export default function AuthButton({
         size={size}
         variant="ghost"
         disabled
-        startContent={<Loader2 className="h-4 w-4 animate-spin" />}
         aria-label="Loading authentication status"
       >
+        <Loader2 className="h-4 w-4 animate-spin mr-2" />
         {showText && 'Loading...'}
       </Button>
     );
@@ -53,11 +53,11 @@ export default function AuthButton({
       <Button
         className={`text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border-border transition-all ${className || ''}`}
         size={size}
-        variant="bordered"
-        onPress={handleSignOut}
-        startContent={<LogOut className="h-4 w-4" />}
+        variant="outline"
+        onClick={handleSignOut}
         aria-label="Sign out of Spotify"
       >
+        <LogOut className="h-4 w-4 mr-2" />
         {showText && 'Sign Out'}
       </Button>
     );
@@ -67,10 +67,10 @@ export default function AuthButton({
     <Button
       className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0 rounded-2xl ${className || ''}`}
       size={size}
-      onPress={handleSignIn}
-      startContent={<LogIn className="h-4 w-4" />}
+      onClick={handleSignIn}
       aria-label="Sign in with Spotify"
     >
+      <LogIn className="h-4 w-4 mr-2" />
       {showText && 'Sign In with Spotify'}
     </Button>
   );

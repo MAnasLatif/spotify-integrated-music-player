@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import { Music, Play, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { formatDuration, truncateText } from '@/lib/utils';
 import type { SpotifyPlaylistTrack } from '@/types/spotify';
 
@@ -41,12 +41,11 @@ function TrackRow({ track, index, onPlay }: TrackRowProps) {
         <div className="flex items-center justify-center">
           {onPlay ? (
             <Button
-              isIconOnly
-              size="sm"
+              size="icon"
               variant="ghost"
               aria-label={`Play ${track.name}`}
               onClick={handlePlay}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
             >
               <Play className="h-3 w-3 fill-current" />
             </Button>
@@ -143,12 +142,11 @@ export default function TrackList({
         <p className="text-gray-500 mb-4">{error}</p>
         {onRetry && (
           <Button
-            color="primary"
-            variant="bordered"
+            variant="outline"
             onClick={onRetry}
-            startContent={<RefreshCw className="h-4 w-4" />}
             aria-label="Retry loading tracks"
           >
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
         )}

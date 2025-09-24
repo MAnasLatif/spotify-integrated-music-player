@@ -1,11 +1,12 @@
 'use client';
 
-import { Button, Card, CardBody, CardFooter } from '@heroui/react';
 import { Music, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { formatNumber, truncateText } from '@/lib/utils';
 import type { SpotifyPlaylist } from '@/types/spotify';
 
@@ -40,14 +41,13 @@ function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
   return (
     <Card
       className="group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus-visible:scale-[1.02] focus-visible:outline-2 focus-visible:outline-primary bg-card border-border"
-      isPressable
-      onPress={handleClick}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      onClick={handleClick}
       aria-label={`Open ${playlist.name} playlist with ${playlist.tracks.total} tracks`}
     >
-      <CardBody className="p-0">
+      <CardContent className="p-0">
         <div className="aspect-square relative bg-gradient-to-br from-muted to-muted/80 rounded-t-lg overflow-hidden">
           {imageUrl && !imageError ? (
             <Image
@@ -68,8 +68,7 @@ function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
-        ß
-      </CardBody>
+      </CardContent>
 
       <CardFooter className="flex flex-col items-start p-4 gap-2">
         <h3 className="font-semibold text-sm text-left w-full text-foreground group-hover:text-green-500 transition-colors">
@@ -124,12 +123,11 @@ export default function PlaylistGrid({
         <p className="text-gray-500 mb-4">{error}</p>
         {onRetry && (
           <Button
-            color="primary"
-            variant="bordered"
+            variant="outline"
             onClick={onRetry}
-            startContent={<RefreshCw className="h-4 w-4" />}
             aria-label="Retry loading playlists"
           >
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
         )}
