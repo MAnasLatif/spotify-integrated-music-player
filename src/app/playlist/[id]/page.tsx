@@ -133,6 +133,37 @@ export default function PlaylistPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session?.accessToken, playlistId]);
 
+  const transferPlaybackToDevice = async (deviceId: string) => {
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${session?.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          device_ids: [deviceId],
+          play: false,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ error: { message: 'Failed to transfer playback' } }));
+        throw new Error(
+          error.error?.message || 'Failed to transfer playback to device',
+        );
+      }
+
+      logger.info('Playback transferred to device', { deviceId });
+      return true;
+    } catch (error) {
+      logger.error('Failed to transfer playback', error, { deviceId });
+      return false;
+    }
+  };
+
   const handlePlayTrack = async (trackUri: string) => {
     if (!deviceId) {
       setPlayerError('Player not ready. Please wait a moment and try again.');
@@ -140,7 +171,16 @@ export default function PlaylistPage() {
     }
 
     try {
-      // Transfer playback and play the specific track
+      // First, try to transfer playback to our device to ensure it's active
+      const transferred = await transferPlaybackToDevice(deviceId);
+      if (!transferred) {
+        throw new Error('Failed to activate device for playback');
+      }
+
+      // Wait a moment for the transfer to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Now start playback on the specific track
       const response = await fetch(
         'https://api.spotify.com/v1/me/player/play',
         {
@@ -157,13 +197,57 @@ export default function PlaylistPage() {
       );
 
       if (!response.ok) {
-        const error = await response
+        const errorData = await response
           .json()
           .catch(() => ({ error: { message: 'Playback failed' } }));
-        throw new Error(error.error?.message || 'Failed to start playback');
+
+        // If device is not found, try transferring again
+        if (
+          response.status === 404 ||
+          errorData.error?.reason === 'NO_ACTIVE_DEVICE'
+        ) {
+          const retryTransfer = await transferPlaybackToDevice(deviceId);
+          if (retryTransfer) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Retry the play request
+            const retryResponse = await fetch(
+              'https://api.spotify.com/v1/me/player/play',
+              {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bearer ${session?.accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  device_id: deviceId,
+                  uris: [trackUri],
+                }),
+              },
+            );
+
+            if (!retryResponse.ok) {
+              const retryError = await retryResponse.json().catch(() => ({
+                error: { message: 'Playback failed after retry' },
+              }));
+              throw new Error(
+                retryError.error?.message ||
+                  'Failed to start playback after device activation',
+              );
+            }
+          } else {
+            throw new Error(
+              'Device not available for playback. Please try again.',
+            );
+          }
+        } else {
+          throw new Error(
+            errorData.error?.message || 'Failed to start playback',
+          );
+        }
       }
 
       logger.info('Track playback started', { trackUri, deviceId });
+      setPlayerError(''); // Clear any previous errors
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to play track';

@@ -92,11 +92,38 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     });
 
     // Player ready
-    spotifyPlayer.on('ready', ({ device_id }) => {
+    spotifyPlayer.on('ready', async ({ device_id }) => {
       playbackLogger.playerReady(device_id);
       setDeviceId(device_id);
       setIsReady(true);
       setError(null);
+
+      // Auto-transfer playback to this device to make it active
+      try {
+        const response = await fetch('https://api.spotify.com/v1/me/player', {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            device_ids: [device_id],
+            play: false, // Don't start playing, just make it the active device
+          }),
+        });
+
+        if (!response.ok) {
+          playbackLogger.error('Failed to auto-transfer playback', undefined, {
+            device_id,
+            status: response.status,
+          });
+        }
+      } catch (error) {
+        playbackLogger.error('Error auto-transferring playback', error, {
+          device_id,
+        });
+      }
+
       onReady?.(device_id);
     });
 
