@@ -11,7 +11,7 @@ export interface SpotifyUser {
   id: string;
   display_name: string | null;
   email?: string;
-  images: SpotifyImage[];
+  images: SpotifyImage[] | null;
   followers: {
     total: number;
   };
@@ -29,7 +29,7 @@ export interface SpotifyPlaylist {
   id: string;
   name: string;
   description: string | null;
-  images: SpotifyImage[];
+  images: SpotifyImage[] | null;
   tracks: {
     total: number;
   };
@@ -71,7 +71,7 @@ export interface SpotifyArtist {
 export interface SpotifyAlbum {
   id: string;
   name: string;
-  images: SpotifyImage[];
+  images: SpotifyImage[] | null;
   artists: SpotifyArtist[];
   release_date: string;
   external_urls: {

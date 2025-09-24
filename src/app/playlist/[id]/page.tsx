@@ -230,7 +230,7 @@ export default function PlaylistPage() {
           <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
             {playlist.images?.[0]?.url ? (
               <Image
-                src={playlist.images[0].url}
+                src={playlist.images[0].url!}
                 alt={`${playlist.name} playlist cover`}
                 width={192}
                 height={192}

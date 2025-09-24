@@ -44,7 +44,7 @@ interface TrackRowProps {
 
 function TrackRow({ track, index, onPlay }: TrackRowProps) {
   const [imageError, setImageError] = useState(false);
-  const imageUrl = track.album.images[0]?.url;
+  const imageUrl = track.album.images?.[0]?.url;
 
   const handlePlay = () => {
     if (onPlay && track.uri) {

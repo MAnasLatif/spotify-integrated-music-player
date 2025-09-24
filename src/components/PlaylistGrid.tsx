@@ -33,7 +33,7 @@ interface PlaylistCardProps {
 
 function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
   const [imageError, setImageError] = useState(false);
-  const imageUrl = playlist.images[0]?.url;
+  const imageUrl = playlist.images?.[0]?.url;
 
   const handleClick = () => {
     onClick(playlist.id);
