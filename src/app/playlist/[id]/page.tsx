@@ -5,8 +5,9 @@ import { ArrowLeft, Music, Play, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Player from '@/components/Player';
 import { useToastContext } from '@/components/ToastProvider';
 import TrackList from '@/components/TrackList';
@@ -20,8 +21,11 @@ export default function PlaylistPage() {
   const { data: session, status } = useSession();
   const { showToast } = useToastContext();
 
-  // Properly extract the id parameter
-  const playlistId = Array.isArray(params.id) ? params.id[0] : params.id;
+  // Properly extract the id parameter with error handling
+  const playlistId = React.useMemo(() => {
+    if (!params?.id) return null;
+    return Array.isArray(params.id) ? params.id[0] : params.id;
+  }, [params?.id]);
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [tracks, setTracks] = useState<SpotifyPlaylistTrack[]>([]);
@@ -31,6 +35,7 @@ export default function PlaylistPage() {
   const [playlistNotFound, setPlaylistNotFound] = useState(false);
   const [deviceId, setDeviceId] = useState<string>('');
   const [playerError, setPlayerError] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   const fetchPlaylistInfo = useCallback(async () => {
     if (!session?.accessToken || !playlistId) return;
@@ -118,6 +123,10 @@ export default function PlaylistPage() {
   }, [fetchPlaylistInfo, fetchTracks]);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (status === 'authenticated' && session?.accessToken && playlistId) {
       fetchData();
     }
@@ -177,9 +186,28 @@ export default function PlaylistPage() {
     setPlayerError(error);
   };
 
+  // Don't render until mounted (prevent hydration mismatch)
+  if (!mounted) {
+    return null;
+  }
+
+  // Handle loading state first
+  if (status === 'loading') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 bg-gray-200 animate-pulse rounded" />
+          <div className="w-32 h-6 bg-gray-200 animate-pulse rounded" />
+        </div>
+      </div>
+    );
+  }
+
   // Redirect if no valid playlist ID
   if (!playlistId) {
-    router.push('/');
+    if (typeof window !== 'undefined') {
+      router.push('/');
+    }
     return null;
   }
 
@@ -220,8 +248,8 @@ export default function PlaylistPage() {
     );
   }
 
-  // Show loading state
-  if (status === 'loading' || loading) {
+  // Show loading state (remove duplicate)
+  if (loading) {
     return (
       <div className="space-y-6">
         {/* Header skeleton */}
@@ -258,119 +286,124 @@ export default function PlaylistPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Navigation */}
-      <div className="flex items-center gap-4">
-        <Button
-          isIconOnly
-          variant="ghost"
-          onClick={() => router.back()}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-lg font-medium text-gray-900">Playlist</h1>
-      </div>
+    <ErrorBoundary>
+      <div className="space-y-6">
+        {/* Navigation */}
+        <div className="flex items-center gap-4">
+          <Button
+            isIconOnly
+            variant="ghost"
+            onClick={() => router.back()}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-medium text-gray-900">Playlist</h1>
+        </div>
 
-      {/* Playlist Header */}
-      {playlist && (
-        <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
-          <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
-            {playlist.images?.[0]?.url ? (
-              <Image
-                src={playlist.images?.[0].url}
-                alt={`${playlist.name} playlist cover`}
-                width={192}
-                height={192}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Music className="h-16 w-16 text-gray-400" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0 space-y-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">
-                Playlist
-              </p>
-              <h2 className="text-3xl font-bold text-gray-900 mt-1 mb-2">
-                {playlist.name}
-              </h2>
-              {playlist.description && (
-                <p className="text-gray-600 leading-relaxed">
-                  {playlist.description}
-                </p>
+        {/* Playlist Header */}
+        {playlist && (
+          <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
+            <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
+              {playlist.images?.[0]?.url ? (
+                <Image
+                  src={playlist.images?.[0]?.url || ''}
+                  alt={`${playlist.name || 'Unknown'} playlist cover`}
+                  width={192}
+                  height={192}
+                  className="w-full h-full object-cover"
+                  onError={() => {
+                    console.warn('Failed to load playlist image');
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Music className="h-16 w-16 text-gray-400" />
+                </div>
               )}
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span>{playlist.owner.display_name || 'Unknown'}</span>
-              <span>•</span>
-              <span>{formatNumber(playlist.tracks.total)} tracks</span>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                color="primary"
-                size="lg"
-                startContent={<Play className="h-5 w-5 fill-current" />}
-                onClick={() => {
-                  // Play first track if available
-                  if (tracks.length > 0 && tracks[0].track.uri) {
-                    handlePlayTrack(tracks[0].track.uri);
-                  }
-                }}
-                disabled={!deviceId || tracks.length === 0}
-              >
-                Play
-              </Button>
-
-              <Button
-                variant="bordered"
-                onClick={fetchTracks}
-                disabled={tracksLoading}
-                startContent={
-                  <RefreshCw
-                    className={`h-4 w-4 ${tracksLoading ? 'animate-spin' : ''}`}
-                  />
-                }
-              >
-                Refresh
-              </Button>
-            </div>
-
-            {playerError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{playerError}</p>
+            <div className="flex-1 min-w-0 space-y-4">
+              <div>
+                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">
+                  Playlist
+                </p>
+                <h2 className="text-3xl font-bold text-gray-900 mt-1 mb-2">
+                  {playlist.name}
+                </h2>
+                {playlist.description && (
+                  <p className="text-gray-600 leading-relaxed">
+                    {playlist.description}
+                  </p>
+                )}
               </div>
-            )}
+
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>{playlist.owner.display_name || 'Unknown'}</span>
+                <span>•</span>
+                <span>{formatNumber(playlist.tracks.total)} tracks</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Button
+                  color="primary"
+                  size="lg"
+                  startContent={<Play className="h-5 w-5 fill-current" />}
+                  onClick={() => {
+                    // Play first track if available
+                    if (tracks.length > 0 && tracks[0].track.uri) {
+                      handlePlayTrack(tracks[0].track.uri);
+                    }
+                  }}
+                  disabled={!deviceId || tracks.length === 0}
+                >
+                  Play
+                </Button>
+
+                <Button
+                  variant="bordered"
+                  onClick={fetchTracks}
+                  disabled={tracksLoading}
+                  startContent={
+                    <RefreshCw
+                      className={`h-4 w-4 ${tracksLoading ? 'animate-spin' : ''}`}
+                    />
+                  }
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              {playerError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">{playerError}</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Track List */}
-      <TrackList
-        tracks={tracks}
-        loading={tracksLoading}
-        error={error}
-        onPlay={handlePlayTrack}
-        onRetry={fetchTracks}
-      />
+        {/* Track List */}
+        <TrackList
+          tracks={tracks}
+          loading={tracksLoading}
+          error={error}
+          onPlay={handlePlayTrack}
+          onRetry={fetchTracks}
+        />
 
-      {/* Player */}
-      {session && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4">
-          <div className="container mx-auto">
-            <Player onReady={handlePlayerReady} onError={handlePlayerError} />
+        {/* Player */}
+        {session && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4">
+            <div className="container mx-auto">
+              <Player onReady={handlePlayerReady} onError={handlePlayerError} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Add bottom padding to account for fixed player */}
-      <div className="h-32" />
-    </div>
+        {/* Add bottom padding to account for fixed player */}
+        <div className="h-32" />
+      </div>
+    </ErrorBoundary>
   );
 }
