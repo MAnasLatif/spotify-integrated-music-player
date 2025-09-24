@@ -15,21 +15,25 @@ import { formatNumber } from '@/lib/utils';
 import type { SpotifyPlaylist, SpotifyPlaylistTrack } from '@/types/spotify';
 
 export default function PlaylistPage() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
   const { data: session, status } = useSession();
   const { showToast } = useToastContext();
+
+  // Properly extract the id parameter
+  const playlistId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [tracks, setTracks] = useState<SpotifyPlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playlistNotFound, setPlaylistNotFound] = useState(false);
   const [deviceId, setDeviceId] = useState<string>('');
   const [playerError, setPlayerError] = useState<string>('');
 
   const fetchPlaylistInfo = useCallback(async () => {
-    if (!session?.accessToken || !id) return;
+    if (!session?.accessToken || !playlistId) return;
 
     try {
       // Get playlist info from the playlists API (we'll need to find it in the list)
@@ -37,25 +41,46 @@ export default function PlaylistPage() {
       if (playlistsResponse.ok) {
         const playlistsData = await playlistsResponse.json();
         const foundPlaylist = playlistsData.items.find(
-          (p: SpotifyPlaylist) => p.id === id,
+          (p: SpotifyPlaylist) => p.id === playlistId,
         );
         if (foundPlaylist) {
           setPlaylist(foundPlaylist);
+        } else {
+          // Try to fetch more playlists if not found in first 50
+          const morePlaylistsResponse = await fetch(
+            '/api/spotify/playlists?limit=50&offset=50',
+          );
+          if (morePlaylistsResponse.ok) {
+            const morePlaylistsData = await morePlaylistsResponse.json();
+            const foundInMore = morePlaylistsData.items.find(
+              (p: SpotifyPlaylist) => p.id === playlistId,
+            );
+            if (foundInMore) {
+              setPlaylist(foundInMore);
+            } else {
+              setPlaylistNotFound(true);
+              logger.warn('Playlist not found in user playlists', {
+                playlistId,
+              });
+            }
+          }
         }
       }
     } catch (error) {
       logger.error('Failed to fetch playlist info', error);
     }
-  }, [session?.accessToken, id]);
+  }, [session?.accessToken, playlistId]);
 
   const fetchTracks = useCallback(async () => {
-    if (!session?.accessToken || !id) return;
+    if (!session?.accessToken || !playlistId) return;
 
     setTracksLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/spotify/playlists/${id}/tracks`);
+      const response = await fetch(
+        `/api/spotify/playlists/${playlistId}/tracks`,
+      );
 
       if (!response.ok) {
         const errorData = await response
@@ -68,7 +93,7 @@ export default function PlaylistPage() {
       setTracks(data.items || []);
 
       logger.info('Tracks loaded successfully', {
-        playlistId: id,
+        playlistId: playlistId,
         count: data.items?.length || 0,
       });
     } catch (error) {
@@ -80,11 +105,11 @@ export default function PlaylistPage() {
         description: message,
         variant: 'error',
       });
-      logger.error('Failed to fetch tracks', error, { playlistId: id });
+      logger.error('Failed to fetch tracks', error, { playlistId: playlistId });
     } finally {
       setTracksLoading(false);
     }
-  }, [session?.accessToken, id, showToast]);
+  }, [session?.accessToken, playlistId, showToast]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -93,11 +118,11 @@ export default function PlaylistPage() {
   }, [fetchPlaylistInfo, fetchTracks]);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.accessToken && id) {
+    if (status === 'authenticated' && session?.accessToken && playlistId) {
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session?.accessToken, id]);
+  }, [status, session?.accessToken, playlistId]);
 
   const handlePlayTrack = async (trackUri: string) => {
     if (!deviceId) {
@@ -152,10 +177,47 @@ export default function PlaylistPage() {
     setPlayerError(error);
   };
 
+  // Redirect if no valid playlist ID
+  if (!playlistId) {
+    router.push('/');
+    return null;
+  }
+
   // Redirect if not authenticated
   if (status === 'unauthenticated') {
     router.push('/');
     return null;
+  }
+
+  // Show playlist not found state
+  if (playlistNotFound) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            isIconOnly
+            variant="ghost"
+            onClick={() => router.back()}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-medium text-gray-900">Playlist</h1>
+        </div>
+
+        <div className="text-center py-12">
+          <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Playlist Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            The playlist you&apos;re looking for doesn&apos;t exist or you
+            don&apos;t have access to it.
+          </p>
+          <Button onClick={() => router.push('/')}>Go to Home</Button>
+        </div>
+      </div>
+    );
   }
 
   // Show loading state
@@ -216,7 +278,7 @@ export default function PlaylistPage() {
           <div className="w-48 h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shrink-0">
             {playlist.images?.[0]?.url ? (
               <Image
-                src={playlist.images[0].url!}
+                src={playlist.images?.[0].url}
                 alt={`${playlist.name} playlist cover`}
                 width={192}
                 height={192}
