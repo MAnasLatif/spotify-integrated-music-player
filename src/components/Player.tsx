@@ -1,16 +1,21 @@
 'use client';
 
-import { Button, Card, CardBody, Progress, Slider } from '@heroui/react';
+import { Button, Card, CardBody, Slider } from '@heroui/react';
 import { clsx } from '@heroui/shared-utils';
 import {
   Heart,
+  ListMusic,
+  Mic2,
+  Monitor,
   Music,
   PauseCircle,
   PlayCircle,
   Repeat,
+  Repeat1,
   Shuffle,
   SkipBack,
   SkipForward,
+  Volume1,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -60,6 +65,10 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'track' | 'context'>(
+    'off',
+  );
+  const [shuffleMode, setShuffleMode] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load Spotify Web Playbook SDK
@@ -248,6 +257,22 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
     }
   }, [player]);
 
+  const handleSeek = useCallback(
+    async (value: number | number[]) => {
+      if (!player) return;
+
+      const seekPosition = Array.isArray(value) ? value[0] : value;
+
+      try {
+        await player.seek(seekPosition);
+        setPosition(seekPosition);
+      } catch (error) {
+        playbackLogger.error('Failed to seek', error);
+      }
+    },
+    [player],
+  );
+
   const handleVolumeChange = useCallback(
     async (value: number | number[]) => {
       if (!player) return;
@@ -276,6 +301,24 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
       playbackLogger.error('Failed to toggle mute', error);
     }
   }, [player, isMuted, volume]);
+
+  const handleRepeatToggle = useCallback(() => {
+    setRepeatMode((current) => {
+      switch (current) {
+        case 'off':
+          return 'context';
+        case 'context':
+          return 'track';
+        case 'track':
+        default:
+          return 'off';
+      }
+    });
+  }, []);
+
+  const handleShuffleToggle = useCallback(() => {
+    setShuffleMode((current) => !current);
+  }, []);
 
   if (!session) {
     return null;
@@ -340,17 +383,17 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
 
           <div className="flex flex-col col-span-6 md:col-span-8">
             <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-0">
-                <h3 className="font-semibold text-foreground/90">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-semibold text-foreground/90 text-sm">
                   {currentTrack?.album?.name || 'No album'}
                 </h3>
-                <p className="text-sm text-foreground/80">
+                <p className="text-xs text-foreground/60">
                   {currentTrack ? '1 Track' : 'No tracks'}
                 </p>
-                <h1 className="text-lg font-medium mt-2">
+                <h1 className="text-xl font-bold mt-2 text-foreground">
                   {currentTrack?.name || 'No track playing'}
                 </h1>
-                <p className="text-sm text-foreground/60">
+                <p className="text-sm text-foreground/70 font-medium">
                   {currentTrack?.artists
                     ?.map((artist) => artist.name)
                     .join(', ') || 'Unknown artist'}
@@ -358,28 +401,42 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               </div>
               <Button
                 isIconOnly
-                className="text-default-900/60 data-[hover=true]:bg-foreground/10 -translate-y-2 translate-x-2"
+                className={clsx(
+                  'data-[hover=true]:bg-foreground/10 -translate-y-2 translate-x-2 transition-colors',
+                  liked ? 'text-red-500' : 'text-foreground/60',
+                )}
                 radius="full"
                 variant="light"
                 onPress={() => setLiked((v) => !v)}
+                aria-label={liked ? 'Remove from liked' : 'Add to liked'}
               >
                 <Heart
-                  className={liked ? '[&>path]:stroke-transparent' : ''}
+                  className={liked ? 'fill-current' : ''}
                   fill={liked ? 'currentColor' : 'none'}
                 />
               </Button>
             </div>
 
             <div className="flex flex-col mt-3 gap-1">
-              <Progress
+              <Slider
                 aria-label="Music progress"
                 classNames={{
-                  indicator: 'bg-default-800 dark:bg-white',
+                  base: 'max-w-full',
+                  filler: 'bg-success',
+                  thumb: [
+                    'transition-size',
+                    'bg-success',
+                    'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
+                    'data-[dragging=true]:w-7 data-[dragging=true]:h-7 data-[dragging=true]:after:h-6 data-[dragging=true]:after:w-6',
+                  ],
                   track: 'bg-default-500/30',
                 }}
-                color="default"
+                color="success"
                 size="sm"
-                value={duration > 0 ? (position / duration) * 100 : 0}
+                step={1000}
+                maxValue={duration}
+                value={position}
+                onChange={handleSeek}
               />
               <div className="flex justify-between">
                 <p className="text-sm">{formatDuration(position)}</p>
@@ -389,87 +446,149 @@ export default function Player({ className, onReady, onError }: PlayerProps) {
               </div>
             </div>
 
-            <div className="flex w-full items-center justify-center mt-4">
+            <div className="flex w-full items-center justify-center mt-4 gap-2">
               <Button
                 isIconOnly
-                className="data-[hover=true]:bg-foreground/10"
+                className={clsx(
+                  'data-[hover=true]:bg-foreground/10 transition-colors',
+                  shuffleMode ? 'text-success' : 'text-foreground/60',
+                )}
                 radius="full"
                 variant="light"
+                onPress={handleShuffleToggle}
+                aria-label="Toggle shuffle"
               >
-                <Repeat className="text-foreground/80" />
+                <Shuffle className="w-4 h-4" />
               </Button>
               <Button
                 isIconOnly
-                className="data-[hover=true]:bg-foreground/10"
+                className="data-[hover=true]:bg-foreground/10 text-foreground/80"
                 radius="full"
                 variant="light"
                 onClick={handlePrevious}
+                aria-label="Previous track"
               >
-                <SkipBack />
+                <SkipBack className="w-5 h-5" />
               </Button>
               <Button
                 isIconOnly
-                className="w-auto h-auto data-[hover=true]:bg-foreground/10"
+                className="w-12 h-12 bg-white text-black data-[hover=true]:bg-white/90 data-[hover=true]:scale-105 transition-all shadow-lg"
                 radius="full"
-                variant="light"
                 onClick={handlePlayPause}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <PauseCircle size={54} />
+                  <PauseCircle className="w-6 h-6" />
                 ) : (
-                  <PlayCircle size={54} />
+                  <PlayCircle className="w-6 h-6" />
                 )}
               </Button>
               <Button
                 isIconOnly
-                className="data-[hover=true]:bg-foreground/10"
+                className="data-[hover=true]:bg-foreground/10 text-foreground/80"
                 radius="full"
                 variant="light"
                 onClick={handleNext}
+                aria-label="Next track"
               >
-                <SkipForward />
+                <SkipForward className="w-5 h-5" />
               </Button>
               <Button
                 isIconOnly
-                className="data-[hover=true]:bg-foreground/10"
+                className={clsx(
+                  'data-[hover=true]:bg-foreground/10 transition-colors',
+                  repeatMode !== 'off' ? 'text-success' : 'text-foreground/60',
+                )}
                 radius="full"
                 variant="light"
+                onPress={handleRepeatToggle}
+                aria-label="Toggle repeat"
               >
-                <Shuffle className="text-foreground/80" />
+                {repeatMode === 'track' ? (
+                  <Repeat1 className="w-4 h-4" />
+                ) : (
+                  <Repeat className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
-            {/* Volume control - moved to bottom */}
-            <div className="flex items-center justify-center space-x-3 mt-4">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                onClick={handleMuteToggle}
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-                className="text-foreground/60 data-[hover=true]:bg-foreground/10"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </Button>
+            {/* Bottom controls row */}
+            <div className="flex items-center justify-between mt-4">
+              {/* Left side - Additional controls */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+                  aria-label="Queue"
+                >
+                  <ListMusic className="w-4 h-4" />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+                  aria-label="Connect to device"
+                >
+                  <Monitor className="w-4 h-4" />
+                </Button>
+              </div>
 
-              <Slider
-                size="sm"
-                step={1}
-                maxValue={100}
-                value={isMuted ? 0 : volume * 100}
-                onChange={handleVolumeChange}
-                className="flex-1 max-w-32"
-                aria-label="Volume"
-                classNames={{
-                  track: 'bg-default-500/30',
-                  filler: 'bg-default-800 dark:bg-white',
-                  thumb: 'bg-default-800 dark:bg-white',
-                }}
-              />
+              {/* Center - Volume control */}
+              <div className="flex items-center space-x-2 flex-1 max-w-40 mx-4">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={handleMuteToggle}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4" />
+                  ) : volume > 0.5 ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <Volume1 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Slider
+                  size="sm"
+                  step={1}
+                  maxValue={100}
+                  value={isMuted ? 0 : volume * 100}
+                  onChange={handleVolumeChange}
+                  className="flex-1"
+                  aria-label="Volume"
+                  classNames={{
+                    base: 'max-w-full',
+                    filler: 'bg-success',
+                    thumb: [
+                      'transition-size',
+                      'bg-success',
+                      'data-[dragging=true]:shadow-lg data-[dragging=true]:shadow-black/20',
+                      'data-[dragging=true]:w-4 data-[dragging=true]:h-4',
+                    ],
+                    track: 'bg-default-500/30',
+                  }}
+                />
+              </div>
+
+              {/* Right side - Additional controls */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  className="text-foreground/60 data-[hover=true]:bg-foreground/10"
+                  aria-label="Lyrics"
+                >
+                  <Mic2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
