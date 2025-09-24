@@ -1,13 +1,3 @@
-/**
- * Root layout with providers and global styles
- * Rules for this file:
- * - Server Component by default; use 'use client' only when needed
- * - Include NextAuth SessionProvider for client components
- * - HeroUI Provider for theme and components
- * - Proper metadata and font configuration
- * - Accessibility: semantic HTML structure
- */
-
 import '@/styles/globals.css';
 
 import type { Metadata, Viewport } from 'next';

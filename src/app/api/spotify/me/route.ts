@@ -1,13 +1,3 @@
-/**
- * Spotify user profile API route
- * Implement a Next.js App Router route handler:
- * - Method: GET
- * - Auth: read session via getServerSession and reject if unauthenticated
- * - Behavior: call Spotify Web API with user's access token
- * - Errors: Map 401/403/429/5xx to JSON with proper status
- * - Return: JSON with minimal user fields needed by UI
- */
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 

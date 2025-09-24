@@ -1,14 +1,3 @@
-/**
- * Track list component for displaying playlist tracks
- * Create a React client component with:
- * - Props: define a Props type
- * - Tailwind + HeroUI components (Table, Button)
- * - Accessibility (aria-labels for controls)
- * - Loading + error UI states
- * - No inline styles; use Tailwind classes
- * - Export default component
- */
-
 'use client';
 
 import {

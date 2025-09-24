@@ -1,12 +1,3 @@
-/**
- * Spotify Web API types
- * Rules for this file:
- * - Define minimal types needed for the app
- * - Match Spotify API response structure
- * - Use consistent naming with Spotify documentation
- * - Include only fields actually used in the UI
- */
-
 export interface SpotifyUser {
   id: string;
   display_name: string | null;

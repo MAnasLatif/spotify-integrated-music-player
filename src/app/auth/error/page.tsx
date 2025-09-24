@@ -1,13 +1,3 @@
-/**
- * Authentication error page
- * Rules for this file:
- * - Server Component by default; use 'use client' only when needed
- * - Handle different authentication error types
- * - Provide user-friendly error messages
- * - Include retry/recovery options
- * - Accessibility: proper error semantics
- */
-
 'use client';
 
 import { Button } from '@heroui/react';

@@ -1,13 +1,3 @@
-/**
- * Spotify Web API client utilities
- * Rules for this file:
- * - Use fetch API with proper error handling
- * - Handle rate limiting (429) with exponential backoff
- * - Map Spotify errors to app-friendly messages
- * - Keep functions pure and testable
- * - Include proper TypeScript types
- */
-
 import type {
   SpotifyError,
   SpotifyPlaylistsResponse,

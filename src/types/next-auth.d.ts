@@ -1,12 +1,3 @@
-/**
- * Nimport type { DefaultSession, DefaultUser } from 'next-auth'
-import type { DefaultJWT } from 'next-auth/jwt'tAuth type extensions for Spotify integration
- * Rules for this file:
- * - Extend default NextAuth types with Spotify-specific fields
- * - Keep types minimal and focused on what the app needs
- * - Use proper TypeScript module augmentation
- */
-
 import type { DefaultSession, DefaultUser } from 'next-auth';
 import type { DefaultJWT } from 'next-auth/jwt';
 

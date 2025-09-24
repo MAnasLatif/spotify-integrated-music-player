@@ -1,12 +1,3 @@
-/**
- * Build a responsive playlist grid:
- * - 2 cols on small, 4 on md+
- * - Card shows cover, name (truncate), track count (muted)
- * - Click selects playlist and navigates to /playlist/[id]
- * - Loading skeleton for better UX
- * - Error states with retry functionality
- */
-
 'use client';
 
 import { Button, Card, CardBody, CardFooter } from '@heroui/react';

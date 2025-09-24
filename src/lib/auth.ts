@@ -1,12 +1,3 @@
-/**
- * NextAuth configuration for Spotify OAuth
- * Rules for this file:
- * - JWT callback: attach Spotify tokens and handle refresh
- * - Session callback: expose accessToken to client safely
- * - Handle token expiration with automatic refresh
- * - Use Prisma adapter for session persistence
- */
-
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { NextAuthOptions } from 'next-auth';
 import SpotifyProvider from 'next-auth/providers/spotify';

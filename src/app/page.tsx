@@ -1,13 +1,3 @@
-/**
- * Home page - displays user playlists or login prompt
- * Rules for this file:
- * - Server Component by default; use 'use client' only when needed
- * - Handle authentication state
- * - Fetch and display playlists
- * - Proper error handling and loading states
- * - Accessibility: semantic headings and navigation
- */
-
 'use client';
 
 import { Button } from '@heroui/react';

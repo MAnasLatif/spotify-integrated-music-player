@@ -1,11 +1,3 @@
-/**
- * Prisma singleton client for Next.js hot-reload safety
- * Rules for this file:
- * - Use singleton pattern to avoid connection leaks in development
- * - Handle graceful shutdown in production
- * - Export typed client for use across the app
- */
-
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {

@@ -1,14 +1,3 @@
-/**
- * Playlist detail page - shows tracks and playback controls
- * Rules for this file:
- * - Server Component by default; use 'use client' only when needed
- * - Handle authentication state
- * - Fetch playlist and track data
- * - Include player component for playback
- * - Proper error handling and loading states
- * - Accessibility: semantic headings and navigation
- */
-
 'use client';
 
 import { Button } from '@heroui/react';
@@ -26,11 +15,10 @@ import { formatNumber } from '@/lib/utils';
 import type { SpotifyPlaylist, SpotifyPlaylistTrack } from '@/types/spotify';
 
 export default function PlaylistPage() {
-  const params = useParams();
+  const { id } = useParams();
   const router = useRouter();
   const { data: session, status } = useSession();
   const { showToast } = useToastContext();
-  const playlistId = params.id as string;
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [tracks, setTracks] = useState<SpotifyPlaylistTrack[]>([]);
@@ -41,7 +29,7 @@ export default function PlaylistPage() {
   const [playerError, setPlayerError] = useState<string>('');
 
   const fetchPlaylistInfo = useCallback(async () => {
-    if (!session?.accessToken || !playlistId) return;
+    if (!session?.accessToken || !id) return;
 
     try {
       // Get playlist info from the playlists API (we'll need to find it in the list)
@@ -49,7 +37,7 @@ export default function PlaylistPage() {
       if (playlistsResponse.ok) {
         const playlistsData = await playlistsResponse.json();
         const foundPlaylist = playlistsData.items.find(
-          (p: SpotifyPlaylist) => p.id === playlistId,
+          (p: SpotifyPlaylist) => p.id === id,
         );
         if (foundPlaylist) {
           setPlaylist(foundPlaylist);
@@ -58,18 +46,16 @@ export default function PlaylistPage() {
     } catch (error) {
       logger.error('Failed to fetch playlist info', error);
     }
-  }, [session?.accessToken, playlistId]);
+  }, [session?.accessToken, id]);
 
   const fetchTracks = useCallback(async () => {
-    if (!session?.accessToken || !playlistId) return;
+    if (!session?.accessToken || !id) return;
 
     setTracksLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/spotify/playlists/${playlistId}/tracks`,
-      );
+      const response = await fetch(`/api/spotify/playlists/${id}/tracks`);
 
       if (!response.ok) {
         const errorData = await response
@@ -82,7 +68,7 @@ export default function PlaylistPage() {
       setTracks(data.items || []);
 
       logger.info('Tracks loaded successfully', {
-        playlistId,
+        playlistId: id,
         count: data.items?.length || 0,
       });
     } catch (error) {
@@ -94,11 +80,11 @@ export default function PlaylistPage() {
         description: message,
         variant: 'error',
       });
-      logger.error('Failed to fetch tracks', error, { playlistId });
+      logger.error('Failed to fetch tracks', error, { playlistId: id });
     } finally {
       setTracksLoading(false);
     }
-  }, [session?.accessToken, playlistId, showToast]);
+  }, [session?.accessToken, id, showToast]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -107,11 +93,11 @@ export default function PlaylistPage() {
   }, [fetchPlaylistInfo, fetchTracks]);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.accessToken && playlistId) {
+    if (status === 'authenticated' && session?.accessToken && id) {
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session?.accessToken, playlistId]);
+  }, [status, session?.accessToken, id]);
 
   const handlePlayTrack = async (trackUri: string) => {
     if (!deviceId) {

@@ -1,12 +1,3 @@
-/**
- * Logger utility for development and production
- * Rules for this file:
- * - Structured logging with consistent format
- * - Different log levels (debug, info, warn, error)
- * - Environment-aware logging (verbose in dev, minimal in prod)
- * - Safe serialization of objects and errors
- */
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {

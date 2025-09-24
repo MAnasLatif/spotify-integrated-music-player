@@ -1,12 +1,3 @@
-/**
- * General utility functions
- * Rules for this file:
- * - Keep functions pure and side-effect free
- * - Include proper TypeScript types
- * - Focus on reusable logic across components
- * - Follow functional programming principles
- */
-
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

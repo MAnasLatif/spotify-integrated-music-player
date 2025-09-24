@@ -1,13 +1,3 @@
-/**
- * Toast context and hooks for error notifications
- * Rules for this file:
- * - Simple toast implementation using state and DOM
- * - Provide context for global toast management
- * - Support different toast variants (error, success, warning, info)
- * - Accessibility compliant
- * - Auto-dismiss functionality
- */
-
 'use client';
 
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react';

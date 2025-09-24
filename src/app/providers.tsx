@@ -1,13 +1,3 @@
-/**
- * Client-side providers for the application
- * Rules for this file:
- * - Client Component ('use client')
- * - Wrap NextAuth SessionProvider
- * - Include HeroUI Provider with theme support
- * - Handle theme persistence
- * - Keep providers minimal and focused
- */
-
 'use client';
 
 import { HeroUIProvider } from '@heroui/react';
